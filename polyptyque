@@ -12,9 +12,10 @@ MIN_WIDTH=999999
 MIN_HEIGHT=999999
 
 for FILE in "$@"; do
-    SIZE=$(identify -format '%w %h' $FILE)
-    WIDTH=$(echo $SIZE | cut -d " " -f 1)
-    HEIGHT=$(echo $SIZE | cut -d " " -f 2)
+    SIZE=$(identify -format '%w %h' "$FILE")
+    WIDTH=$(echo "$SIZE" | cut -d " " -f 1)
+    HEIGHT=$(echo "$SIZE" | cut -d " " -f 2)
+    # TODO(boertel) only layout in row
     if [[ $HEIGHT < $MIN_HEIGHT ]]; then
         MIN_WIDTH=$WIDTH
         MIN_HEIGHT=$HEIGHT
@@ -26,12 +27,12 @@ INDEX=0
 PICTURES=""
 for FILE in "$@"; do
     FILENAME="resize-$INDEX.jpg"
-    if [[ $FILE != $REF ]]; then
-        CONVERT="convert $FILE -resize ${MIN_WIDTH}x${MIN_HEIGHT} $FILENAME"
-        echo $CONVERT
-        eval $CONVERT
+    if [[ "$FILE" != "$REF" ]]; then
+        CONVERT="convert \"$FILE\" -resize ${MIN_WIDTH}x${MIN_HEIGHT} \"$FILENAME\""
+        echo "$CONVERT"
+        eval "$CONVERT"
     else
-        cp $FILE $FILENAME
+        cp "$FILE" "$FILENAME"
     fi
     INDEX=$(echo "$INDEX + 1" | bc)
     PICTURES="$PICTURES $FILENAME"
@@ -39,12 +40,12 @@ done
 
 TMP_FILE=tmp.jpg
 MONTAGE="montage $PICTURES -geometry +$BORDER+$BORDER $TMP_FILE"
-echo $MONTAGE
-eval $MONTAGE
+echo "$MONTAGE"
+eval "$MONTAGE"
 
-CONVERT_BORDER="convert $TMP_FILE -bordercolor white -border $BORDERx$BORDER $OUTPUT"
-echo $CONVERT_BORDER
-eval $CONVERT_BORDER
+CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor white -border $BORDERx$BORDER \"$OUTPUT\""
+echo "$CONVERT_BORDER"
+eval "$CONVERT_BORDER"
 
 rm -rf $PICTURES
 rm -rf "$TMP_FILE"
