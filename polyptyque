@@ -10,7 +10,7 @@ OUTPUT="polyptyque-$(date +%s).jpg"
 
 
 if [[ $# == 0 ]]; then
-    echo "Usage: $0 [--dry-run] [-b <border size>] [-c <border color>] [-l <layout>] [-o <output file>] -- [file...]"
+    echo "Usage: $(basename $0) [--dry-run] [-b <border size>] [-c <border color>] [-l <layout>] [-o <output file>] -- [file...]"
     echo "Options:"
     echo -e "\t-b, --border SIZE\t\t\tset border size. default: $BORDER"
     echo -e "\t-c, --color COLOR\t\t\tset border color. default: $BORDER_COLOR"
