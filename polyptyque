@@ -97,10 +97,10 @@ TILE=""
 if [[ "$LAYOUT" == "vertical" ]]; then
     TILE="-tile 1x$INDEX"
 fi
-MONTAGE="montage $PICTURES $TILE -geometry +$BORDER+$BORDER $TMP_FILE"
+MONTAGE="montage $PICTURES $TILE -background '$BORDER_COLOR' -geometry +$BORDER+$BORDER $TMP_FILE"
 run_cmd "$MONTAGE"
 
-CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor $BORDER_COLOR -border $BORDERx$BORDER \"$OUTPUT\""
+CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor '$BORDER_COLOR' -border $BORDERx$BORDER \"$OUTPUT\""
 run_cmd "$CONVERT_BORDER"
 
 run_cmd "rm -rf $PICTURES"
