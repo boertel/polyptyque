@@ -5,7 +5,7 @@ if [[ $# == 0 ]]; then
     exit 1
 fi
 
-OUTPUT=duotype.jpg
+OUTPUT="polyptyque-$(date +%s).jpg"
 BORDER=50
 
 MIN_WIDTH=999999
