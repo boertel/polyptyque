@@ -1,21 +1,70 @@
 #!/bin/bash
 
+BORDER=50
+BORDER_COLOR="white"
+LAYOUT="horizontal"
+
+DRY_RUN=0
+VERBOSE=0
+OUTPUT="polyptyque-$(date +%s).jpg"
+
+
 if [[ $# == 0 ]]; then
-    echo "usage: $0 ...files"
+    echo "Usage: $0 [--dry-run] [-b <border size>] [-c <border color>] [-l <layout>] [-o <output file>] -- [file...]"
+    echo "Options:"
+    echo -e "\t-b, --border SIZE\t\t\tset border size. default: $BORDER"
+    echo -e "\t-c, --color COLOR\t\t\tset border color. default: $BORDER_COLOR"
+    echo -e "\t-l, --layout horizontal|vertical\tset layout. default: $LAYOUT"
+    echo -e "\t-o, --output PATH\t\t\tset output file. default: $0-<timestamp>.jpg"
+    echo ""
+    echo -e "\t--verbose\t\t\t\tdisplay imagemagick underlying commands executed"
+    echo -e "\t--dry-run\t\t\t\tdoesn't execute commands"
+
     exit 1
 fi
 
-OUTPUT="polyptyque-$(date +%s).jpg"
-BORDER=50
+TMP_DIR=/tmp
+TMP_PREFIX="polyptyque-$(date +%s)"
+
+while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
+    -b | --border)
+        shift; BORDER=$1
+        ;;
+    -c | --color)
+        shift; BORDER_COLOR=$1
+        ;;
+    -l | --layout)
+        shift; LAYOUT=$1
+        ;;
+    -o | --output)
+        shift; OUTPUT=$1
+        ;;
+    --verbose)
+        VERBOSE=1
+        ;;
+    --dry-run )
+        VERBOSE=1
+        DRY_RUN=1
+        ;;
+esac; shift; done
+if [[ "$1" == '--' ]]; then shift; fi
+
 
 MIN_WIDTH=999999
 MIN_HEIGHT=999999
 
 for FILE in "$@"; do
-    SIZE=$(identify -format '%w %h' "$FILE")
-    WIDTH=$(echo "$SIZE" | cut -d " " -f 1)
-    HEIGHT=$(echo "$SIZE" | cut -d " " -f 2)
-    # TODO(boertel) only layout in row
+    SIZE=$(identify -format '%[EXIF:Orientation] %w %h' "$FILE")
+    ORIENTATION=$(echo "$SIZE" | cut -d " " -f 1)
+    WIDTH_INDEX=2
+    HEIGHT_INDEX=3
+    if [[ "$ORIENTATION" == "8" ]]; then
+        # Portrait
+        WIDTH_INDEX=3
+        HEIGHT_INDEX=2
+    fi
+    WIDTH=$(echo "$SIZE" | cut -d " " -f $WIDTH_INDEX)
+    HEIGHT=$(echo "$SIZE" | cut -d " " -f $HEIGHT_INDEX)
     if [[ $HEIGHT < $MIN_HEIGHT ]]; then
         MIN_WIDTH=$WIDTH
         MIN_HEIGHT=$HEIGHT
@@ -23,29 +72,38 @@ for FILE in "$@"; do
     fi
 done
 
+function run_cmd {
+    if [[ $VERBOSE -eq 1 ]]; then
+        echo "$1"
+    fi
+    if [[ $DRY_RUN -ne 1 ]]; then
+        eval "$1"
+    fi
+}
+
 INDEX=0
 PICTURES=""
 for FILE in "$@"; do
-    FILENAME="resize-$INDEX.jpg"
-    if [[ "$FILE" != "$REF" ]]; then
-        CONVERT="convert \"$FILE\" -resize ${MIN_WIDTH}x${MIN_HEIGHT} \"$FILENAME\""
-        echo "$CONVERT"
-        eval "$CONVERT"
-    else
-        cp "$FILE" "$FILENAME"
-    fi
+    FILENAME="$TMP_DIR/$TMP_PREFIX-resize-$INDEX.jpg"
+    CONVERT="convert \"$FILE\" -auto-orient -resize ${MIN_WIDTH}x${MIN_HEIGHT} \"$FILENAME\""
+    run_cmd "$CONVERT"
     INDEX=$(echo "$INDEX + 1" | bc)
     PICTURES="$PICTURES $FILENAME"
 done
 
-TMP_FILE=tmp.jpg
-MONTAGE="montage $PICTURES -geometry +$BORDER+$BORDER $TMP_FILE"
-echo "$MONTAGE"
-eval "$MONTAGE"
+TMP_FILE="$TMP_DIR/$TMP_PREFIX-tmp.jpg"
 
-CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor white -border $BORDERx$BORDER \"$OUTPUT\""
-echo "$CONVERT_BORDER"
-eval "$CONVERT_BORDER"
+TILE=""
+if [[ "$LAYOUT" == "horizontal" ]]; then
+    TILE="-tile 1x$INDEX"
+fi
+MONTAGE="montage $PICTURES $TILE -geometry +$BORDER+$BORDER $TMP_FILE"
+run_cmd "$MONTAGE"
 
-rm -rf $PICTURES
-rm -rf "$TMP_FILE"
+CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor $BORDER_COLOR -border $BORDERx$BORDER \"$OUTPUT\""
+run_cmd "$CONVERT_BORDER"
+
+run_cmd "rm -rf $PICTURES"
+run_cmd "rm -rf \"$TMP_FILE\""
+
+echo "$OUTPUT"
