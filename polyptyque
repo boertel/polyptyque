@@ -94,7 +94,7 @@ done
 TMP_FILE="$TMP_DIR/$TMP_PREFIX-tmp.jpg"
 
 TILE=""
-if [[ "$LAYOUT" == "horizontal" ]]; then
+if [[ "$LAYOUT" == "vertical" ]]; then
     TILE="-tile 1x$INDEX"
 fi
 MONTAGE="montage $PICTURES $TILE -geometry +$BORDER+$BORDER $TMP_FILE"
