@@ -26,6 +26,16 @@ fi
 TMP_DIR=/tmp
 TMP_PREFIX="polyptyque-$(date +%s)"
 
+function run_cmd {
+    if [[ $VERBOSE -eq 1 ]]; then
+        echo "$1"
+    fi
+    if [[ $DRY_RUN -ne 1 ]]; then
+        eval "$1"
+    fi
+}
+
+
 while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
     -b | --border)
         shift; BORDER=$1
@@ -68,18 +78,8 @@ for FILE in "$@"; do
     if [[ $HEIGHT < $MIN_HEIGHT ]]; then
         MIN_WIDTH=$WIDTH
         MIN_HEIGHT=$HEIGHT
-        REF=$FILE
     fi
 done
-
-function run_cmd {
-    if [[ $VERBOSE -eq 1 ]]; then
-        echo "$1"
-    fi
-    if [[ $DRY_RUN -ne 1 ]]; then
-        eval "$1"
-    fi
-}
 
 INDEX=0
 PICTURES=""
@@ -93,7 +93,7 @@ done
 
 TMP_FILE="$TMP_DIR/$TMP_PREFIX-tmp.jpg"
 
-TILE=""
+TILE="-tile x1"
 if [[ "$LAYOUT" == "vertical" ]]; then
     TILE="-tile 1x$INDEX"
 fi
