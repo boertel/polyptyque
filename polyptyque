@@ -28,8 +28,11 @@ fi
 TMP_DIR=/tmp
 
 function run_cmd {
-    if [[ $VERBOSE -eq 1 ]]; then
-        echo "$1"
+    if [[ $VERBOSE -ge 1 ]]; then
+        echo "$2"
+    fi
+    if [[ $VERBOSE -ge 2 ]]; then
+        echo -e "\t$ $1"
     fi
     if [[ $DRY_RUN -ne 1 ]]; then
         eval "$1"
@@ -50,8 +53,11 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
     -o | --output)
         shift; OUTPUT=$1
         ;;
-    --verbose)
+    -v | --verbose)
         VERBOSE=1
+        ;;
+    -vv)
+        VERBOSE=2
         ;;
     --dry-run )
         VERBOSE=1
@@ -88,7 +94,7 @@ for FILE in "$@"; do
     FILENAME="$TMP_DIR/$TMP_PREFIX-resize-$INDEX.$OUTPUT_EXTENSION"
     (
         CONVERT="convert \"$FILE\" -auto-orient -resize ${MIN_WIDTH}x${MIN_HEIGHT} \"$FILENAME\""
-        run_cmd "$CONVERT"
+        run_cmd "$CONVERT" "Resizing and updating orientation for $FILE"
     ) &
     PICTURES="$PICTURES $FILENAME"
     INDEX=$(echo "$INDEX + 1" | bc)
@@ -102,12 +108,11 @@ if [[ "$LAYOUT" == "vertical" ]]; then
     TILE="-tile 1x$INDEX"
 fi
 MONTAGE="montage $PICTURES $TILE -background '$BORDER_COLOR' -geometry +$BORDER+$BORDER $TMP_FILE"
-run_cmd "$MONTAGE"
+run_cmd "$MONTAGE" "Merging pictures into one"
 
 CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor '$BORDER_COLOR' -border $BORDERx$BORDER \"$OUTPUT\""
-run_cmd "$CONVERT_BORDER"
+run_cmd "$CONVERT_BORDER" "Adding border around the final picture"
 
-run_cmd "rm -rf $PICTURES"
-run_cmd "rm -rf \"$TMP_FILE\""
+run_cmd "rm -rf $PICTURES \"$TMP_FILE\"" "Removing temporary pictures"
 
 echo "$OUTPUT"
