@@ -7,7 +7,8 @@ LAYOUT="horizontal"
 DRY_RUN=0
 VERBOSE=0
 OUTPUT_EXTENSION="png"
-OUTPUT="polyptyque-$(date +%s).$OUTPUT_EXTENSION"
+TMP_PREFIX="polyptyque-$(date +%s)"
+OUTPUT="$TMP_PREFIX.$OUTPUT_EXTENSION"
 
 
 if [[ $# == 0 ]]; then
@@ -16,7 +17,7 @@ if [[ $# == 0 ]]; then
     echo -e "\t-b, --border SIZE\t\t\tset border size. default: $BORDER"
     echo -e "\t-c, --color COLOR\t\t\tset border color. default: $BORDER_COLOR"
     echo -e "\t-l, --layout horizontal|vertical\tset layout. default: $LAYOUT"
-    echo -e "\t-o, --output PATH\t\t\tset output file. default: $0-<timestamp>.$OUTPUT_EXTENSION"
+    echo -e "\t-o, --output PATH\t\t\tset output file. default: ./polyptyque-<timestamp>.$OUTPUT_EXTENSION"
     echo ""
     echo -e "\t--verbose\t\t\t\tdisplay imagemagick underlying commands executed"
     echo -e "\t--dry-run\t\t\t\tdoesn't execute commands"
@@ -25,7 +26,6 @@ if [[ $# == 0 ]]; then
 fi
 
 TMP_DIR=/tmp
-TMP_PREFIX="polyptyque-$(date +%s)"
 
 function run_cmd {
     if [[ $VERBOSE -eq 1 ]]; then
@@ -86,11 +86,14 @@ INDEX=0
 PICTURES=""
 for FILE in "$@"; do
     FILENAME="$TMP_DIR/$TMP_PREFIX-resize-$INDEX.$OUTPUT_EXTENSION"
-    CONVERT="convert \"$FILE\" -auto-orient -resize ${MIN_WIDTH}x${MIN_HEIGHT} \"$FILENAME\""
-    run_cmd "$CONVERT"
-    INDEX=$(echo "$INDEX + 1" | bc)
+    (
+        CONVERT="convert \"$FILE\" -auto-orient -resize ${MIN_WIDTH}x${MIN_HEIGHT} \"$FILENAME\""
+        run_cmd "$CONVERT"
+    ) &
     PICTURES="$PICTURES $FILENAME"
+    INDEX=$(echo "$INDEX + 1" | bc)
 done
+wait
 
 TMP_FILE="$TMP_DIR/$TMP_PREFIX-tmp.$OUTPUT_EXTENSION"
 
