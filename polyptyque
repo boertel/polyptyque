@@ -3,6 +3,7 @@
 BORDER=50
 BORDER_COLOR="white"
 LAYOUT="horizontal"
+RATIO=""
 
 DRY_RUN=0
 VERBOSE=0
@@ -17,6 +18,7 @@ if [[ $# == 0 ]]; then
     echo -e "\t-b, --border SIZE\t\t\tset border size. default: $BORDER"
     echo -e "\t-c, --color COLOR\t\t\tset border color. default: $BORDER_COLOR"
     echo -e "\t-l, --layout horizontal|vertical\tset layout. default: $LAYOUT"
+    echo -e "\t-r, --ratio RATIO\t\t\tset ratio. default: <none>"
     echo -e "\t-o, --output PATH\t\t\tset output file. default: ./polyptyque-<timestamp>.$OUTPUT_EXTENSION"
     echo ""
     echo -e "\t--verbose\t\t\t\tdisplay imagemagick underlying commands executed"
@@ -49,6 +51,9 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
         ;;
     -l | --layout)
         shift; LAYOUT=$1
+        ;;
+    -r | --ratio)
+        shift; RATIO=$1
         ;;
     -o | --output)
         shift; OUTPUT=$1
@@ -103,14 +108,20 @@ wait
 
 TMP_FILE="$TMP_DIR/$TMP_PREFIX-tmp.$OUTPUT_EXTENSION"
 
-TILE="-tile x1"
+TILE="-tile x1 "
 if [[ "$LAYOUT" == "vertical" ]]; then
-    TILE="-tile 1x$INDEX"
+    TILE="-tile 1x$INDEX "
 fi
-MONTAGE="montage $PICTURES $TILE -background '$BORDER_COLOR' -geometry +$BORDER+$BORDER $TMP_FILE"
+MONTAGE="montage$PICTURES $TILE-background '$BORDER_COLOR' -geometry +$BORDER+$BORDER $TMP_FILE"
 run_cmd "$MONTAGE" "Merging pictures into one"
 
-CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor '$BORDER_COLOR' -border $BORDERx$BORDER \"$OUTPUT\""
+RATIO_ARGS=""
+if [[ -n "$RATIO" ]]; then
+    RATIO_HEIGHT=$(echo "scale=0; $MIN_WIDTH * $RATIO" | bc)
+    RATIO_ARGS="-background '$BORDER_COLOR' -resize ${RATIO_WIDTH}x${RATIO_HEIGHT} -gravity center -extent ${RATIO_WIDTH}x${RATIO_HEIGHT} "
+fi
+
+CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor '$BORDER_COLOR' -border $BORDERx$BORDER $RATIO_ARGS\"$OUTPUT\""
 run_cmd "$CONVERT_BORDER" "Adding border around the final picture"
 
 run_cmd "rm -rf $PICTURES \"$TMP_FILE\"" "Removing temporary pictures"
