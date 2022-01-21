@@ -65,7 +65,6 @@ while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
         VERBOSE=2
         ;;
     --dry-run )
-        VERBOSE=1
         DRY_RUN=1
         ;;
 esac; shift; done
@@ -117,6 +116,7 @@ run_cmd "$MONTAGE" "Merging pictures into one"
 
 RATIO_ARGS=""
 if [[ -n "$RATIO" ]]; then
+    RATIO_WIDTH=$MIN_WIDTH
     RATIO_HEIGHT=$(echo "scale=0; $MIN_WIDTH * $RATIO" | bc)
     RATIO_ARGS="-background '$BORDER_COLOR' -resize ${RATIO_WIDTH}x${RATIO_HEIGHT} -gravity center -extent ${RATIO_WIDTH}x${RATIO_HEIGHT} "
 fi
