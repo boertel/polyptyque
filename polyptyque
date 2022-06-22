@@ -97,7 +97,14 @@ PICTURES=""
 for FILE in "$@"; do
     FILENAME="$TMP_DIR/$TMP_PREFIX-resize-$INDEX.$OUTPUT_EXTENSION"
     (
-        CONVERT="convert \"$FILE\" -auto-orient -resize ${MIN_WIDTH}x${MIN_HEIGHT} \"$FILENAME\""
+        RESIZE="-resize ${MIN_WIDTH}x${MIN_HEIGHT}"
+        if [[ -n "$RATIO" ]]; then
+            RATIO_WIDTH=$(echo "scale=0; $MIN_WIDTH * $RATIO" | bc)
+            RATIO_HEIGHT=$(echo "scale=0; $MIN_HEIGHT * $RATIO" | bc)
+
+            RESIZE="-resize ${RATIO_WIDTH}x${RATIO_HEIGHT}^ -gravity center -extent ${RATIO_WIDTH}x${RATIO_HEIGHT}"
+        fi
+        CONVERT="convert \"$FILE\" -auto-orient $RESIZE \"$FILENAME\""
         run_cmd "$CONVERT" "Resizing and updating orientation for $FILE"
     ) &
     PICTURES="$PICTURES $FILENAME"
@@ -111,17 +118,15 @@ TILE="-tile x1 "
 if [[ "$LAYOUT" == "vertical" ]]; then
     TILE="-tile 1x$INDEX "
 fi
+
+if [[ -n "$RATIO" ]]; then
+    BORDER=$(echo "scale=0; $BORDER * $RATIO" | bc)
+fi
+
 MONTAGE="montage$PICTURES $TILE-background '$BORDER_COLOR' -geometry +$BORDER+$BORDER $TMP_FILE"
 run_cmd "$MONTAGE" "Merging pictures into one"
 
-RATIO_ARGS=""
-if [[ -n "$RATIO" ]]; then
-    RATIO_WIDTH=$MIN_WIDTH
-    RATIO_HEIGHT=$(echo "scale=0; $MIN_WIDTH * $RATIO" | bc)
-    RATIO_ARGS="-background '$BORDER_COLOR' -resize ${RATIO_WIDTH}x${RATIO_HEIGHT} -gravity center -extent ${RATIO_WIDTH}x${RATIO_HEIGHT} "
-fi
-
-CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor '$BORDER_COLOR' -border $BORDERx$BORDER $RATIO_ARGS\"$OUTPUT\""
+CONVERT_BORDER="convert \"$TMP_FILE\" -bordercolor '$BORDER_COLOR' -border $BORDERx$BORDER \"$OUTPUT\""
 run_cmd "$CONVERT_BORDER" "Adding border around the final picture"
 
 run_cmd "rm -rf $PICTURES \"$TMP_FILE\"" "Removing temporary pictures"
