@@ -1,0 +1,180 @@
+<html>
+    <head>
+        <title>Polyptyque</title>
+        <style>
+            @font-face {
+                font-family: "iAWriterDuoV";
+                font-style: normal;
+                font-weight: 100 900;
+                font-display: swap;
+                src: url("iAWriterDuoV.ttf") format("ttf");
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body,
+            pre {
+                font-family: "iAWriterDuoV", monospace;
+            }
+
+            body {
+                background-color: #000;
+                color: #fff;
+                max-width: 800px;
+                width: 100%;
+                margin: 0 auto;
+                padding: 20px;
+                font-size: 16px;
+            }
+
+            ::selection {
+                background-color: hsla(var(--primary), 0.5);
+                color: #fff;
+            }
+
+            :root {
+                --primary: 40, 48%, 62%;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4 {
+                color: hsl(var(--primary));
+            }
+
+            h1 {
+                font-size: 80px;
+            }
+
+            h2 {
+                display: flex;
+                gap: 12px;
+                items-align: center;
+                margin-top: 40px;
+            }
+
+            h2 > hr {
+                width: 100%;
+                border-width: 0;
+                border-color: #fff;
+                border-bottom-width: 1px;
+                opacity: 0.5;
+            }
+
+            img {
+                min-height: 360px;
+                object-fit: contain;
+            }
+
+            pre {
+                white-space: break-spaces;
+            }
+
+            code {
+                display: block;
+            }
+
+            code:before {
+                content: "$ ";
+                color: #fff;
+                opacity: 0.8;
+            }
+
+            a {
+                color: #fff;
+                text-decoration: underline;
+            }
+
+            a:hover,
+            a:focus {
+                color: hsl(var(--primary));
+            }
+
+            button {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                background-color: rgba(255, 255, 255, 0.5);
+                border-radius: 8px;
+                padding: 8px;
+                font-size: 24px;
+                border: none;
+                cursor: pointer;
+                color: #fff;
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Polyptyque</h1>
+        <p>
+            <em
+                >CLI tool to create a
+                <a
+                    href="https://en.wikipedia.org/wiki/Polyptych"
+                    target="_blank"
+                    >polyptych</a
+                >
+                from a set of images.</em
+            >
+        </p>
+        <img id="polyptyque" alt="Polyptyque" style="width: 100%" />
+        <h2>
+            Usage
+            <hr />
+        </h2>
+        <pre>
+        polyptyque [--dry-run] [-b &lt;border size&gt;] [-c &lt;border color&gt;] [-l &lt;layout&gt;] [-o &lt;output
+        file&gt;] -- [file...]
+        Options:
+        -b, --border SIZE set border size. default: 50
+        -c, --color COLOR set border color. default: white
+        -l, --layout horizontal|vertical set layout. default: horizontal
+        -r, --ratio RATIO set ratio. default:&lt;none&gt;
+        -o, --output PATH set output file. default: ./polyptyque-&lt;timestamp&gt;.png
+
+        --verbose display imagemagick underlying commands executed
+        --dry-run doesn't execute commands</pre
+        >
+
+        <h2>
+            Installation
+            <hr />
+        </h2>
+        <code>brew tap boertel/tap</code>
+        <code>brew install polyptyque</code>
+
+        <h2>
+            Credits
+            <hr />
+        </h2>
+        <small>
+            Created by
+            <a href="https://ben.oertel.fr" target="_blank">Benjamin Oertel</a>
+            and source code available on GitHub
+            <a href="https://github.com/boertel/polyptyque" target="_blank"
+                >boertel/polyptyque</a
+            >
+        </small>
+
+        <script>
+            const sets = [
+                { src: "images/cascais.jpeg", color: "40, 48%, 62%" },
+                { src: "images/alcatraz.jpeg", color: "148, 26.8%, 22%" },
+                { src: "images/bridge.jpeg", color: "4.1, 62.7%, 46.3%" },
+            ];
+
+            function setRandomImage() {
+                const { src, color } =
+                    sets[Math.floor(Math.random() * sets.length)];
+                document.getElementById("polyptyque").src = src;
+                document.documentElement.style.setProperty("--primary", color);
+            }
+
+            setRandomImage();
+        </script>
+    </body>
+</html>
